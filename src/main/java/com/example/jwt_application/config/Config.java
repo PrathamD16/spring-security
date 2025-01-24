@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -17,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -24,27 +26,29 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class Config {
 
     @Autowired
-//    UserDetailsService userDetailsService;
     MyUserDetailService myUserDetailService;
 
-    @Bean
-    public StudentService studentService(){
-        return new StudentService();
-    }
+    @Autowired
+    private JwtFilter jwtFilter;
 
-    @Bean
-    public UserService userService(){
-        return new UserService();
-    }
-
-    @Bean
-    public JWTService jwtService(){return new JWTService();}
+//    @Bean
+//    public StudentService studentService(){
+//        return new StudentService();
+//    }
+//
+//    @Bean
+//    public UserService userService(){
+//        return new UserService();
+//    }
+//
+//    @Bean
+//    public JWTService jwtService(){return new JWTService();}
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
 
-        http.
-                csrf(x -> x.disable())
+        http
+                .csrf(x -> x.disable())
                 .authorizeHttpRequests(req -> req
                         .requestMatchers(
                                 new AntPathRequestMatcher("/register"),
@@ -53,8 +57,8 @@ public class Config {
                         .anyRequest().authenticated())
                 .formLogin(x -> x.disable())
                 .httpBasic(Customizer.withDefaults())
-
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
